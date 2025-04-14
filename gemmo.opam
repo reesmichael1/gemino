@@ -14,6 +14,10 @@ depends: [
   "cmdliner"
   "base"
   "tls"
+  "uri"
+  "ppx_deriving"
+  "ppx_jane"
+  "ppx_let"
   "odoc" {with-doc}
 ]
 build: [

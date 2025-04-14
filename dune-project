@@ -19,6 +19,6 @@
  (name gemmo)
  (synopsis "A Gemini browser")
  (description "A browser for the Gemini protocol")
- (depends ocaml cmdliner base tls)
+ (depends ocaml cmdliner base tls uri ppx_deriving.eq ppx_deriving.show ppx_jane ppx_let)
  (tags
   ("gemini" "browser")))
