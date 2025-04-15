@@ -53,6 +53,47 @@ let test_link_spacing () =
     ]
     (parse_text "=>          gopher://example.org:70/1        A gopher link")
 
+let test_preformat_no_alt () =
+  Alcotest.(check (list gemline))
+    "same list"
+    [ Gemtext.Line.PreformatToggle None ]
+    (parse_text "```")
+
+let test_preformat_alt () =
+  Alcotest.(check (list gemline))
+    "same list"
+    [ Gemtext.Line.PreformatToggle (Some "demonstration of alt text") ]
+    (parse_text "```demonstration of alt text")
+
+let test_list_items () =
+  Alcotest.(check (list gemline))
+    "same list"
+    [
+      Gemtext.Line.ListItem (Some "item 1");
+      ListItem None;
+      ListItem (Some "item 3");
+    ]
+    (parse_text "* item 1\n* \n* item 3")
+
+let test_quote_lines () =
+  Alcotest.(check (list gemline))
+    "same list"
+    [
+      Gemtext.Line.Quote "this is a quoted line"; Quote ""; Quote " and another";
+    ]
+    (parse_text ">this is a quoted line\n>\n> and another")
+
+let test_heading_lines () =
+  Alcotest.(check (list gemline))
+    "same list"
+    [
+      Gemtext.Line.Heading
+        { level = Gemtext.Line.HeadingLevel.Top; text = "heading" };
+      Heading { level = Sub; text = "sub-heading" };
+      Heading { level = SubSub; text = "sub-sub-heading" };
+    ]
+    (parse_text "# heading\n##sub-heading\n###    sub-sub-heading")
+
 let tests =
   let open Alcotest in
   [
@@ -62,4 +103,9 @@ let tests =
     test_case "simple link with no name" `Quick test_link_line;
     test_case "simple link with name" `Quick test_link_name;
     test_case "more complicated link" `Quick test_link_spacing;
+    test_case "preformat toggle with no alt text" `Quick test_preformat_no_alt;
+    test_case "preformat toggle with alt text" `Quick test_preformat_alt;
+    test_case "list items" `Quick test_list_items;
+    test_case "quote lines" `Quick test_quote_lines;
+    test_case "heading lines" `Quick test_heading_lines;
   ]

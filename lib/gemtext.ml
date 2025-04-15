@@ -1,13 +1,17 @@
 open Base
 
 module Line = struct
+  module HeadingLevel = struct
+    type t = Top | Sub | SubSub [@@deriving show, equal]
+  end
+
   type t =
     | Text of string
     | Link of { url : Uri.t; name : string option }
-    | Heading
-    | ListItem
-    | Quote
-    | PreformatToggle
+    | Heading of { level : HeadingLevel.t; text : string }
+    | ListItem of string option
+    | Quote of string
+    | PreformatToggle of string option
   [@@deriving show, eq]
 end
 
@@ -38,35 +42,56 @@ module Parser = struct
   let line_kind l =
     if String.is_prefix ~prefix:"=>" l then
       Line.Link { url = Uri.of_string ""; name = None }
-    else if String.is_prefix ~prefix:"```" l then PreformatToggle
-    else if String.is_prefix ~prefix:"#" l then Heading
-    else if String.is_prefix ~prefix:"* " l then ListItem
-    else if String.is_prefix ~prefix:">" l then Quote
+    else if String.is_prefix ~prefix:"```" l then PreformatToggle None
+    else if String.is_prefix ~prefix:"#" l then
+      Heading { level = Line.HeadingLevel.Top; text = "" }
+    else if String.is_prefix ~prefix:"* " l then ListItem None
+    else if String.is_prefix ~prefix:">" l then Quote ""
     else Text ""
 
-  let line_parser state l =
+  let normal_line_parser l =
     match line_kind l with
-    | Line.Text _ -> (state, Ok (Some (Line.Text l)))
-    | Line.PreformatToggle -> (
-        match state with
-        | Normal -> (Preformatted, Ok None)
-        | Preformatted -> (Normal, Ok None))
-    | Line.Link _ -> (
+    | Line.Text _ -> (Normal, Ok (Line.Text l))
+    | PreformatToggle _ ->
+        let maybe_alt = String.drop_prefix l 3 in
+        let alt =
+          if String.length maybe_alt > 0 then Some maybe_alt else None
+        in
+        (Preformatted, Ok (PreformatToggle alt))
+    | Link _ -> (
         match Combs.run_link l with
-        | Ok link -> (state, Ok (Some link))
+        | Ok link -> (Normal, Ok link)
         | Error _ ->
-            ( state,
+            ( Normal,
               Or_error.error_s
                 [%message "invalid link encountered while parsing"] ))
-    | _ -> failwith "todo!"
+    | ListItem _ ->
+        let maybe_body = String.drop_prefix l 2 in
+        let body =
+          if String.length maybe_body > 0 then Some maybe_body else None
+        in
+        (Normal, Ok (ListItem body))
+    | Quote _ -> (Normal, Ok (Quote (String.drop_prefix l 1)))
+    | Heading _ ->
+        let trim s n = String.drop_prefix s n |> String.strip in
+        let build s = function
+          | Line.HeadingLevel.Top as level ->
+              Line.Heading { level; text = trim s 1 }
+          | Sub as level -> Heading { level; text = trim s 2 }
+          | SubSub as level -> Heading { level; text = trim s 3 }
+        in
+        if String.is_prefix ~prefix:"###" l then (Normal, Ok (build l SubSub))
+        else if String.is_prefix ~prefix:"##" l then (Normal, Ok (build l Sub))
+        else (Normal, Ok (build l Top))
+
+  let line_parser state line =
+    match state with
+    | Normal -> normal_line_parser line
+    | Preformatted -> failwith "todo!"
 
   let run str =
-    let open Or_error.Let_syntax in
     let lines = String.split_lines str in
-    let%bind parsed =
-      List.folding_map ~init:Normal ~f:line_parser lines |> Or_error.all
-    in
-    Ok (List.filter_map ~f:Fn.id parsed)
+    List.folding_map ~init:Normal ~f:line_parser lines |> Or_error.all
 end
 
 let of_string = Parser.run
