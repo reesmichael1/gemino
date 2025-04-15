@@ -94,6 +94,17 @@ let test_heading_lines () =
     ]
     (parse_text "# heading\n##sub-heading\n###    sub-sub-heading")
 
+let test_preformatted_content () =
+  Alcotest.(check (list gemline))
+    "same list"
+    [
+      Gemtext.Line.PreformatToggle None;
+      Text "=> not a link";
+      Text "# nor a heading";
+      Text "* nor a list";
+    ]
+    (parse_text "```\n=> not a link\n# nor a heading\n* nor a list")
+
 let tests =
   let open Alcotest in
   [
@@ -108,4 +119,6 @@ let tests =
     test_case "list items" `Quick test_list_items;
     test_case "quote lines" `Quick test_quote_lines;
     test_case "heading lines" `Quick test_heading_lines;
+    test_case "content inside preformatted block" `Quick
+      test_preformatted_content;
   ]

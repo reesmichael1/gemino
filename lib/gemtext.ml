@@ -49,6 +49,11 @@ module Parser = struct
     else if String.is_prefix ~prefix:">" l then Quote ""
     else Text ""
 
+  let preformatted_line_parser l =
+    match line_kind l with
+    | Line.PreformatToggle _ -> (Normal, Ok (Line.PreformatToggle None))
+    | _ -> (Preformatted, Ok (Line.Text l))
+
   let normal_line_parser l =
     match line_kind l with
     | Line.Text _ -> (Normal, Ok (Line.Text l))
@@ -87,7 +92,7 @@ module Parser = struct
   let line_parser state line =
     match state with
     | Normal -> normal_line_parser line
-    | Preformatted -> failwith "todo!"
+    | Preformatted -> preformatted_line_parser line
 
   let run str =
     let lines = String.split_lines str in
