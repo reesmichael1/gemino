@@ -7,11 +7,17 @@ let is_invalid_scheme = function
 let render =
   let open Or_error.Let_syntax in
   function
-  | Gemini.Success { mimetype = _; body } ->
-      (* TODO: check the MIME and only parse when correct *)
-      let%bind lines = Gemtext.of_string body in
-      List.iter ~f:(fun l -> Stdlib.print_endline @@ Gemtext.Line.show l) lines;
-      Ok ()
+  | Gemini.Success { mimetype; body } -> (
+      match (mimetype.ty, mimetype.subty) with
+      | `Text, `Ietf_token "gemini" ->
+          let%bind lines = Gemtext.of_string body in
+          List.iter
+            ~f:(fun l -> Stdlib.print_endline @@ Gemtext.Line.show l)
+            lines;
+          Ok ()
+      | _ ->
+          Stdlib.print_endline body;
+          Ok ())
   | _ -> Or_error.error_s [%message "response type not yet supported"]
 
 let show path =

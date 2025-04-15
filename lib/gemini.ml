@@ -1,6 +1,6 @@
 open Base
 
-type success_reply = { mimetype : string; body : string }
+type success_reply = { mimetype : Mrmime.Content_type.t; body : string }
 
 type t =
   | Input
@@ -13,10 +13,8 @@ type t =
 module Parser = struct
   open Angstrom
 
-  let not_space c = not (Char.is_whitespace c)
-
   let success =
-    string "20 " *> take_while1 not_space >>= fun mimetype ->
+    string "20 " *> Mrmime.Content_type.Decoder.content >>= fun mimetype ->
     string "\r\n" *> take_while (fun _ -> true) >>= fun body ->
     return (Success { mimetype; body })
 

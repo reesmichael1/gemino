@@ -28,6 +28,7 @@
   domain-name
   eio
   mirage-crypto-rng
+  mrmime
   tls
   tls-eio
   uri

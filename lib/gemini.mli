@@ -1,6 +1,6 @@
 open Base
 
-type success_reply = { mimetype : string; body : string }
+type success_reply = { mimetype : Mrmime.Content_type.t; body : string }
 
 type t =
   | Input
