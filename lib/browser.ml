@@ -4,19 +4,15 @@ let is_invalid_scheme = function
   | None | Some "gemini" -> false
   | Some _ -> true
 
-(* let parse_reply contents = *)
-(*   let open Or_error.Let_syntax in *)
-(*   (* let lines = String.split_lines contents in *) *)
-(*   (* let%bind first = *) *)
-(*   (*   Or_error.of_option ~error:(Error.create_s [%message "received empty reply"]) *) *)
-(*   (*   @@ List.hd lines *) *)
-(*   (* in *) *)
-(*   let%bind resp = Gemini.of_reply contents in *)
-(*   Ok "hello world!" *)
-
-let render = function
-  | Gemini.Success { mimetype = _; body } -> Stdlib.print_endline body
-  | _ -> failwith "todo"
+let render =
+  let open Or_error.Let_syntax in
+  function
+  | Gemini.Success { mimetype = _; body } ->
+      (* TODO: check the MIME and only parse when correct *)
+      let%bind lines = Gemtext.of_string body in
+      List.iter ~f:(fun l -> Stdlib.print_endline @@ Gemtext.Line.show l) lines;
+      Ok ()
+  | _ -> Or_error.error_s [%message "response type not yet supported"]
 
 let show path =
   let open Or_error.Let_syntax in
@@ -38,5 +34,4 @@ let show path =
     in
     let contents = Or_error.ok_exn @@ Net.load_uri uri in
     let%bind reply = Gemini.of_reply contents in
-    render reply;
-    Ok ()
+    render reply
