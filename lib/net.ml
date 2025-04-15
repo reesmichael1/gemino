@@ -3,7 +3,7 @@ open Base
 let load_uri uri =
   let open Or_error.Let_syntax in
   let%bind host =
-    Result.of_option
+    Or_error.of_option
       ~error:(Error.create_s [%message "no hostname given in URI"])
     @@ Uri.host uri
   in

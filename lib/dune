@@ -1,5 +1,5 @@
 (library
- (libraries base domain-name eio_main tls tls-eio uri)
+ (libraries angstrom base domain-name eio_main tls tls-eio uri)
  (preprocess
   (pps ppx_jane ppx_deriving.show ppx_let))
  (name gemmo))

@@ -11,6 +11,7 @@ bug-reports: "https://github.com/username/reponame/issues"
 depends: [
   "dune" {>= "3.17"}
   "ocaml"
+  "angstrom"
   "base"
   "cmdliner"
   "domain-name"

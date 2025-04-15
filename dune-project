@@ -21,6 +21,7 @@
  (description "A browser for the Gemini protocol")
  (depends
   ocaml
+  angstrom
   base
   cmdliner
   domain-name
