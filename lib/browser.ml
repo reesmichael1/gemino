@@ -40,4 +40,5 @@ let show path =
     in
     let contents = Or_error.ok_exn @@ Net.load_uri uri in
     let%bind reply = Gemini.of_reply contents in
+
     render reply

@@ -24,6 +24,7 @@
   (alcotest :with-test)
   angstrom
   base
+  bogue
   cmdliner
   domain-name
   eio
@@ -33,7 +34,9 @@
   tls-eio
   uri
   ppx_deriving
+  ; ppx_deriving_yojson
   ppx_jane
-  ppx_let)
+  ppx_let
+  ppx_yojson_conv)
  (tags
   ("gemini" "browser")))
