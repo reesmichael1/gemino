@@ -1,6 +1,6 @@
-(executables
- (public_names gemmo ipcdemo ipcsend)
- (names main ipcdemo ipcsend)
+(executable
+ (public_name gemmo)
+ (name main)
  (preprocess
   (pps ppx_jane ppx_deriving.show ppx_let))
  (libraries gemmo mirage-crypto-rng.unix cmdliner))

@@ -1,11 +1,54 @@
 open Base
 open Cmdliner
+open Eio.Std
 
-let path =
-  let doc = "$(docv) is the URI to load" and docv = "URI" in
-  Arg.(required & pos 0 (some string) None & info [] ~doc ~docv)
+let addr = `Unix "/run/user/1000/gemmo.sock"
 
-let run path = Or_error.ok_exn @@ Gemmo.Browser.show path
+let get_contents_and_serialize uri =
+  let open Or_error.Let_syntax in
+  let%bind contents = Gemmo.Net.load_uri uri in
+  let%bind lines = Gemmo.Gemtext.of_string contents in
+  let response = Gemmo.Ipc.Serialize.gemtext_lines lines in
+  Ok response
+
+let err_response = Gemmo.Ipc.Serialize.error
+
+let handle_client res flow addr =
+  let open Or_error.Let_syntax in
+  traceln "Accepted connection at %a" Eio.Net.Sockaddr.pp addr;
+  let from_client = Eio.Buf_read.of_flow ~max_size:100 flow in
+  let line = Eio.Buf_read.line from_client in
+  traceln "Received: %S" line;
+  let json = Yojson.Safe.from_string line in
+  let%bind msg = Gemmo.Msg.of_yojson json in
+  match msg with
+  | Gemmo.Msg.LoadUrl { url } ->
+      Stdlib.print_endline url;
+      (match get_contents_and_serialize @@ Uri.of_string url with
+      | Ok resp -> Eio.Flow.copy_string (Yojson.Safe.to_string resp) flow
+      | Error err ->
+          Eio.Flow.copy_string
+            (Yojson.Safe.to_string @@ err_response @@ Error.to_string_hum err)
+            flow);
+      Ok ()
+  | Close ->
+      Eio.Flow.copy_string "goodbye!" flow;
+      Eio.Promise.resolve res ();
+      Ok ()
+
+let server_run sock =
+  let stop, resolver = Eio.Promise.create ~label:"server_stop" () in
+  Eio.Net.run_server sock
+    (fun flow addr -> Or_error.ok_exn @@ handle_client resolver flow addr)
+    ~stop
+    ~on_error:(traceln "Error handling connection: %a" Fmt.exn)
+
+let run =
+  Mirage_crypto_rng_unix.use_default ();
+  Eio_main.run @@ fun env ->
+  Eio.Switch.run @@ fun sw ->
+  let sock = Eio.Net.listen ~sw ~backlog:5 (Eio.Stdenv.net env) addr in
+  server_run sock
 
 let cmd_run =
   let doc = "Browse pages in Geminispace" in
@@ -13,8 +56,6 @@ let cmd_run =
     [ `S Manpage.s_bugs; `P "Email bug reports to <mrees@noeontheend.com>" ]
   in
   let info = Cmd.info "gemmo" ~version:"%%VERSION%%" ~doc ~man in
-  Cmd.v info Term.(const run $ path)
+  Cmd.v info Term.(const run)
 
-let () =
-  Mirage_crypto_rng_unix.use_default ();
-  Stdlib.exit (Cmd.eval cmd_run)
+let () = Stdlib.exit (Cmd.eval cmd_run)

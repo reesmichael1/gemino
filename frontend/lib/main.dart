@@ -2,21 +2,33 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
 
-void main() {
+void startServer() async {
+  // Obviously we need to fix everything about this
+  await Process.start("../_build/default/bin/main.exe", []);
+}
+
+void main() async {
+  startServer();
   runApp(const MyApp());
 }
 
-class Message {
-  final String kind;
-  final List<String> args;
+class LoadUrlMsg {
+  final String url;
 
-  Message(this.kind, this.args);
+  LoadUrlMsg(this.url);
 
-  Message.fromJson(Map<String, dynamic> json)
-    : kind = json['kind'] as String,
-      args = json['args'];
+  LoadUrlMsg.fromJson(Map<String, dynamic> json)
+    : url = json['loadUrl']['url'] as String;
 
-  Map<String, dynamic> toJson() => {'kind': kind, 'args': args};
+  Map<String, dynamic> toJson() => {
+    'loadUrl': {'url': url},
+  };
+}
+
+class AppExitMsg {
+  AppExitMsg();
+
+  String toJson() => 'appExit';
 }
 
 class MyApp extends StatefulWidget {
@@ -58,7 +70,7 @@ class _MyAppState extends State<MyApp> {
                     child: TextField(
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
-                        hintText: 'Send message to the server',
+                        hintText: 'Enter Gemini URI',
                       ),
                       onChanged: (contents) {
                         setState(() {
@@ -83,7 +95,7 @@ class _MyAppState extends State<MyApp> {
                         });
                       });
 
-                      var msg = Message('duplicate', [boxContents.trim()]);
+                      var msg = LoadUrlMsg(boxContents.trim());
                       String json = jsonEncode(msg);
                       socket.writeln(json);
                     },
@@ -93,9 +105,7 @@ class _MyAppState extends State<MyApp> {
                     child: Text('close application'),
                     onPressed: () async {
                       final socket = await Socket.connect(_address, 0);
-                      var msg = Message('close', []);
-                      String json = jsonEncode(msg);
-                      socket.writeln(json);
+                      socket.writeln(jsonEncode(AppExitMsg()));
                       exit(0);
                     },
                   ),
