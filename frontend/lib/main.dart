@@ -8,7 +8,7 @@ void startServer() async {
 }
 
 void main() async {
-  startServer();
+  // startServer();
   runApp(const MyApp());
 }
 
@@ -39,7 +39,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  var boxContents = "";
   String? message;
 
   final _address = InternetAddress(
@@ -59,58 +58,37 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(title: const Text('gemmo')),
         body: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Text(message ?? ""),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 800,
-                    child: TextField(
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter Gemini URI',
-                      ),
-                      onChanged: (contents) {
-                        setState(() {
-                          boxContents = contents;
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    child: Text('send message'),
-                    onPressed: () async {
-                      final socket = await Socket.connect(_address, 0);
-                      socket.listen((data) {
-                        setState(() {
-                          message = String.fromCharCodes(data).trim();
-                        });
-                      });
+              Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: 'Enter Gemini URI',
+                        ),
+                        onSubmitted: (contents) async {
+                          final socket = await Socket.connect(_address, 0);
+                          socket.listen((data) {
+                            setState(() {
+                              message = String.fromCharCodes(data).trim();
+                            });
+                          });
 
-                      var msg = LoadUrlMsg(boxContents.trim());
-                      String json = jsonEncode(msg);
-                      socket.writeln(json);
-                    },
-                  ),
-                  SizedBox(width: 20),
-                  ElevatedButton(
-                    child: Text('close application'),
-                    onPressed: () async {
-                      final socket = await Socket.connect(_address, 0);
-                      socket.writeln(jsonEncode(AppExitMsg()));
-                      exit(0);
-                    },
-                  ),
-                ],
+                          var msg = LoadUrlMsg(contents);
+                          String json = jsonEncode(msg);
+                          socket.writeln(json);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              Text(message ?? ""),
             ],
           ),
         ),
