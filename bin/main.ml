@@ -7,9 +7,16 @@ let addr = `Unix "/run/user/1000/gemmo.sock"
 let get_contents_and_serialize uri =
   let open Or_error.Let_syntax in
   let%bind contents = Gemmo.Net.load_uri uri in
-  let%bind lines = Gemmo.Gemtext.of_string contents in
-  let response = Gemmo.Ipc.Serialize.gemtext_lines lines in
-  Ok response
+  let%bind response = Gemmo.Gemini.of_reply contents in
+  match response with
+  | Gemmo.Gemini.Success r -> (
+      match (r.mimetype.ty, r.mimetype.subty) with
+      | `Text, `Ietf_token "gemini" ->
+          let%bind lines = Gemmo.Gemtext.of_string r.body in
+          let response = Gemmo.Ipc.Serialize.gemtext_lines lines in
+          Ok response
+      | _ -> Or_error.error_s [%message "mimetype not supported yet"])
+  | _ -> Or_error.error_s [%message "response kind not supported yet"]
 
 let err_response = Gemmo.Ipc.Serialize.error
 
