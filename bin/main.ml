@@ -23,7 +23,6 @@ let handle_client res flow addr =
   let%bind msg = Gemmo.Msg.of_yojson json in
   match msg with
   | Gemmo.Msg.LoadUrl { url } ->
-      Stdlib.print_endline url;
       (match get_contents_and_serialize @@ Uri.of_string url with
       | Ok resp -> Eio.Flow.copy_string (Yojson.Safe.to_string resp) flow
       | Error err ->

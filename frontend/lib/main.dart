@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
 
+import 'gemtext.dart';
+
 void startServer() async {
   // Obviously we need to fix everything about this
   await Process.start("../_build/default/bin/main.exe", []);
 }
 
 void main() async {
-  // startServer();
+  startServer();
   runApp(const MyApp());
 }
 
@@ -74,12 +76,20 @@ class _MyAppState extends State<MyApp> {
                         onSubmitted: (contents) async {
                           final socket = await Socket.connect(_address, 0);
                           socket.listen((data) {
+                            final json = String.fromCharCodes(data).trim();
+                            final response = ServerResponse.fromJson(
+                              jsonDecode(json),
+                            );
+
                             setState(() {
-                              message = String.fromCharCodes(data).trim();
+                              message = switch (response) {
+                                ContentResponse() => response.mime,
+                                ErrorResponse(msg: final msg) => 'error: $msg',
+                              };
                             });
                           });
 
-                          var msg = LoadUrlMsg(contents);
+                          final msg = LoadUrlMsg(contents);
                           String json = jsonEncode(msg);
                           socket.writeln(json);
                         },
