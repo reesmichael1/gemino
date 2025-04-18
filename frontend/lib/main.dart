@@ -89,7 +89,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
   }
 
-  urlSubmit(String url) async {
+  urlSubmit(context, String url) async {
     final socket = await Socket.connect(_address, 0);
     socket.listen((data) {
       final json = String.fromCharCodes(data).trim();
@@ -97,7 +97,9 @@ class _MyAppState extends State<MyApp> {
 
       setState(() {
         contents = switch (response) {
-          ContentResponse() => renderContents(response.lines),
+          ContentResponse() => Renderer(
+            theme: Theme.of(context),
+          ).renderContents(response.lines),
           ErrorResponse(msg: final msg) => [Text('error: $msg')],
         };
       });
@@ -118,7 +120,7 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              UrlBar(urlSubmit: urlSubmit),
+              UrlBar(urlSubmit: (url) => urlSubmit(context, url)),
               SizedBox(height: 10),
               RenderArea(contents: contents),
             ],
