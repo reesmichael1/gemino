@@ -1,3 +1,5 @@
+open Base
+
 module Serialize = struct
   let h_level = function
     | Gemtext.Line.HeadingLevel.Top -> `Int 1
@@ -9,7 +11,10 @@ module Serialize = struct
     | ListItem (Some l) -> `Assoc [ ("list", `String l) ]
     | ListItem None -> `Assoc [ ("list", `Null) ]
     | Quote q -> `Assoc [ ("quote", `String q) ]
-    | PreformatToggle _ -> `String "preformat TODO"
+    | Preformatted { alt; lines } ->
+        let alt = match alt with Some s -> `String s | None -> `Null in
+        let lines = List.map ~f:(fun s -> `String s) lines in
+        `Assoc [ ("pre", `Assoc [ ("alt", alt); ("lines", `List lines) ]) ]
     | Heading { level; text } ->
         `Assoc
           [

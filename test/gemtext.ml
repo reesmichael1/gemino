@@ -56,13 +56,16 @@ let test_link_spacing () =
 let test_preformat_no_alt () =
   Alcotest.(check (list gemline))
     "same list"
-    [ Gemtext.Line.PreformatToggle None ]
+    [ Gemtext.Line.Preformatted { alt = None; lines = [] } ]
     (parse_text "```")
 
 let test_preformat_alt () =
   Alcotest.(check (list gemline))
     "same list"
-    [ Gemtext.Line.PreformatToggle (Some "demonstration of alt text") ]
+    [
+      Gemtext.Line.Preformatted
+        { alt = Some "demonstration of alt text"; lines = [] };
+    ]
     (parse_text "```demonstration of alt text")
 
 let test_list_items () =
@@ -98,10 +101,11 @@ let test_preformatted_content () =
   Alcotest.(check (list gemline))
     "same list"
     [
-      Gemtext.Line.PreformatToggle None;
-      Text "=> not a link";
-      Text "# nor a heading";
-      Text "* nor a list";
+      Gemtext.Line.Preformatted
+        {
+          alt = None;
+          lines = [ "=> not a link"; "# nor a heading"; "* nor a list" ];
+        };
     ]
     (parse_text "```\n=> not a link\n# nor a heading\n* nor a list")
 

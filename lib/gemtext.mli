@@ -13,7 +13,7 @@ module Line : sig
     (* Use string instead of string option for Quote 
      * since it's reasonable to quote an empty line *)
     | Quote of string
-    | PreformatToggle of string option
+    | Preformatted of { alt : string option; lines : string list }
   [@@deriving show, equal]
 end
 
