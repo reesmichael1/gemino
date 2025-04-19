@@ -93,10 +93,10 @@ module Serialize = struct
           | Some m -> ("msg", `String m)
           | None -> ("msg", `Null)
         in
-        let failmsg descr msg =
+        let failmsg desc msg =
           Ok
             (`Assoc
-               [ ("permfail", `Assoc [ ("kind", `String descr); msg_fmt msg ]) ])
+               [ ("permfail", `Assoc [ ("kind", `String desc); msg_fmt msg ]) ])
         in
         match f with
         | Gemini.General msg -> failmsg "general" msg
@@ -104,6 +104,18 @@ module Serialize = struct
         | Gone msg -> failmsg "gone" msg
         | ProxyRefused msg -> failmsg "proxyrequestrefused" msg
         | BadRequest msg -> failmsg "badrequest" msg)
+    | Redirect m -> (
+        let redirmsg desc url =
+          Ok
+            (`Assoc
+               [
+                 ( "redirect",
+                   `Assoc [ ("kind", `String desc); ("dest", `String url) ] );
+               ])
+        in
+        match m with
+        | Temporary url -> redirmsg "temporary" url
+        | Permanent url -> redirmsg "permanent" url)
     | _ -> Or_error.error_s [%message "response kind not supported yet"]
 
   let error err = `Assoc [ ("error", `String err) ]

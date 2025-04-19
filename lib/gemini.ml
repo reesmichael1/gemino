@@ -11,11 +11,12 @@ type permfail_reply =
 
 (* TODO: Verify that the input prompts are required *)
 type input_kind = Normal of string | Sensitive of string
+type redirect_reply = Temporary of string | Permanent of string
 
 type t =
   | Input of input_kind
   | Success of success_reply
-  | Redirect
+  | Redirect of redirect_reply
   | Tempfail
   | Permfail of permfail_reply
   | Auth
@@ -56,8 +57,17 @@ module Parser = struct
     string "1 " *> take_while1 (fun c -> Char.(c <> '\r')) >>= fun prompt ->
     string "\r\n" *> return (Input (Sensitive prompt))
 
+  let redirect_temp =
+    string "0 " *> take_while1 (fun c -> Char.(c <> '\r')) >>= fun url ->
+    string "\r\n" *> return (Redirect (Temporary url))
+
+  let redirect_perm =
+    string "1 " *> take_while1 (fun c -> Char.(c <> '\r')) >>= fun url ->
+    string "\r\n" *> return (Redirect (Permanent url))
+
   let input = string "1" *> (input_normal <|> input_sensitive)
-  let gem_reply = success <|> input <|> permfail
+  let redirect = string "3" *> (redirect_temp <|> redirect_perm)
+  let gem_reply = success <|> input <|> permfail <|> redirect
 
   let parse contents =
     Eio.Std.traceln "%S" contents;

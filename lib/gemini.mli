@@ -2,6 +2,7 @@ open Base
 
 type success_reply = { mimetype : Mrmime.Content_type.t; body : string }
 type input_kind = Normal of string | Sensitive of string
+type redirect_reply = Temporary of string | Permanent of string
 
 type permfail_reply =
   | General of string option
@@ -13,7 +14,7 @@ type permfail_reply =
 type t =
   | Input of input_kind
   | Success of success_reply
-  | Redirect
+  | Redirect of redirect_reply
   | Tempfail
   | Permfail of permfail_reply
   | Auth
