@@ -2,6 +2,13 @@ open Base
 
 type success_reply = { mimetype : Mrmime.Content_type.t; body : string }
 
+type tempfail_reply =
+  | Unspecified of string option
+  | ServerUnavailable of string option
+  | CgiError of string option
+  | ProxyError of string option
+  | SlowDown of string option
+
 type permfail_reply =
   | General of string option
   | NotFound of string option
@@ -17,11 +24,12 @@ type t =
   | Input of input_kind
   | Success of success_reply
   | Redirect of redirect_reply
-  | Tempfail
+  | Tempfail of tempfail_reply
   | Permfail of permfail_reply
   | Auth
 
 module Parser = struct
+  (* TODO: Mimic the BNF exactly *)
   open Angstrom
 
   let newline = string "\r\n"
@@ -30,6 +38,23 @@ module Parser = struct
     string "20 " *> Mrmime.Content_type.Decoder.content >>= fun mimetype ->
     newline *> take_while (fun _ -> true) >>= fun body ->
     return (Success { mimetype; body })
+
+  let tempfail =
+    let tempfail_gen num kind =
+      string (Printf.sprintf "%d " num)
+      *> take_while (fun c -> Char.(c <> '\r'))
+      >>= fun msg ->
+      string "\r\n"
+      *>
+      if String.length msg = 0 then return (Tempfail (kind None))
+      else return (Tempfail (kind (Some msg)))
+    in
+    string "4"
+    *> (tempfail_gen 0 (fun m -> Unspecified m)
+       <|> tempfail_gen 1 (fun m -> ServerUnavailable m)
+       <|> tempfail_gen 2 (fun m -> CgiError m)
+       <|> tempfail_gen 3 (fun m -> ProxyError m)
+       <|> tempfail_gen 4 (fun m -> SlowDown m))
 
   let permfail =
     let permfail_gen num kind =
@@ -67,7 +92,7 @@ module Parser = struct
 
   let input = string "1" *> (input_normal <|> input_sensitive)
   let redirect = string "3" *> (redirect_temp <|> redirect_perm)
-  let gem_reply = success <|> input <|> permfail <|> redirect
+  let gem_reply = success <|> input <|> permfail <|> redirect <|> tempfail
 
   let parse contents =
     Eio.Std.traceln "%S" contents;

@@ -11,11 +11,18 @@ type permfail_reply =
   | ProxyRefused of string option
   | BadRequest of string option
 
+type tempfail_reply =
+  | Unspecified of string option
+  | ServerUnavailable of string option
+  | CgiError of string option
+  | ProxyError of string option
+  | SlowDown of string option
+
 type t =
   | Input of input_kind
   | Success of success_reply
   | Redirect of redirect_reply
-  | Tempfail
+  | Tempfail of tempfail_reply
   | Permfail of permfail_reply
   | Auth
 

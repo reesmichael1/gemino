@@ -73,6 +73,13 @@ module Serialize = struct
 
   let gemini =
     let open Or_error.Let_syntax in
+    let msg_fmt = function
+      | Some m -> ("msg", `String m)
+      | None -> ("msg", `Null)
+    in
+    let failmsg kind desc msg =
+      Ok (`Assoc [ (kind, `Assoc [ ("kind", `String desc); msg_fmt msg ]) ])
+    in
     function
     | Gemini.Success r -> (
         match (r.mimetype.ty, r.mimetype.subty) with
@@ -89,21 +96,21 @@ module Serialize = struct
         in
         Ok (`Assoc [ ("input", `Assoc [ kind; ("prompt", `String p) ]) ])
     | Gemini.Permfail f -> (
-        let msg_fmt = function
-          | Some m -> ("msg", `String m)
-          | None -> ("msg", `Null)
-        in
-        let failmsg desc msg =
-          Ok
-            (`Assoc
-               [ ("permfail", `Assoc [ ("kind", `String desc); msg_fmt msg ]) ])
-        in
+        let failmsg = failmsg "permfail" in
         match f with
         | Gemini.General msg -> failmsg "general" msg
         | NotFound msg -> failmsg "notfound" msg
         | Gone msg -> failmsg "gone" msg
         | ProxyRefused msg -> failmsg "proxyrequestrefused" msg
         | BadRequest msg -> failmsg "badrequest" msg)
+    | Gemini.Tempfail f -> (
+        let failmsg = failmsg "tempfail" in
+        match f with
+        | Gemini.Unspecified msg -> failmsg "unspecified" msg
+        | ServerUnavailable msg -> failmsg "serverunavailable" msg
+        | CgiError msg -> failmsg "cgierror" msg
+        | ProxyError msg -> failmsg "proxyerror" msg
+        | SlowDown msg -> failmsg "slowdown" msg)
     | Redirect m -> (
         let redirmsg desc url =
           Ok
