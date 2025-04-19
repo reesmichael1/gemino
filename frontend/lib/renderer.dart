@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'gemtext.dart';
 
 class Renderer {
@@ -36,7 +37,7 @@ class Renderer {
 
   TextStyle linkStyle() {
     return textStyle().copyWith(
-      color: Color.from(alpha: 1.0, blue: 1.0, red: 0.0, green: 0.0),
+      color: Colors.blue,
       decoration: TextDecoration.underline,
     );
   }
@@ -53,7 +54,17 @@ class Renderer {
               text,
               style: headingStyle(level),
             ),
-            LinkLine(name: final name) => Text(name, style: linkStyle()),
+            LinkLine(name: final name, url: final url) => Text.rich(
+              TextSpan(
+                text: name,
+                style: linkStyle(),
+                recognizer:
+                    TapGestureRecognizer()
+                      ..onTap = () {
+                        debugPrint('clicked $url');
+                      },
+              ),
+            ),
           },
         )
         .toList();

@@ -41,7 +41,7 @@ class RenderArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Flexible(child: ListView(children: contents));
+    return Flexible(child: SelectionArea(child: ListView(children: contents)));
   }
 }
 
@@ -59,7 +59,7 @@ class UrlBar extends StatelessWidget {
           child: TextField(
             decoration: InputDecoration(
               border: OutlineInputBorder(),
-              hintText: 'Enter Gemini URI',
+              hintText: 'URL',
             ),
             onSubmitted: (url) => urlSubmit!(url),
           ),
@@ -114,7 +114,6 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(title: const Text('gemmo')),
         body: Padding(
           padding: EdgeInsets.all(16),
           child: Column(
