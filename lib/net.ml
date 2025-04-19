@@ -1,6 +1,6 @@
 open Base
 
-let load_uri uri =
+let load_uri net uri =
   let open Or_error.Let_syntax in
   let%bind host =
     Or_error.of_option
@@ -12,8 +12,7 @@ let load_uri uri =
         Error.create_s [%message "could not extract domain name from hostname"])
     @@ Domain_name.of_string host
   in
-  Eio_main.run @@ fun env ->
-  Eio.Net.with_tcp_connect ~host ~service:"1965" env#net @@ fun conn ->
+  Eio.Net.with_tcp_connect ~host ~service:"1965" net @@ fun conn ->
   let client =
     match
       Tls.Config.client ~authenticator:(fun ?ip:_ ~host:_ _ -> Ok None) ()

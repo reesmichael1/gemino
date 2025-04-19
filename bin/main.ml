@@ -4,9 +4,9 @@ open Eio.Std
 
 let addr = `Unix "/run/user/1000/gemmo.sock"
 
-let get_contents_and_serialize uri =
+let get_contents_and_serialize net uri =
   let open Or_error.Let_syntax in
-  let%bind contents = Gemmo.Net.load_uri uri in
+  let%bind contents = Gemmo.Net.load_uri net uri in
   let%bind response = Gemmo.Gemini.of_reply contents in
   match response with
   | Gemmo.Gemini.Success r -> (
@@ -26,7 +26,7 @@ let error_handler flow = function
       Eio.Flow.copy_string (err_response @@ Error.to_string_hum err) flow;
       ()
 
-let handle_client res flow addr =
+let handle_client net res flow addr =
   let open Or_error.Let_syntax in
   traceln "Accepted connection at %a" Eio.Net.Sockaddr.pp addr;
   let from_client = Eio.Buf_read.of_flow ~max_size:100 flow in
@@ -37,7 +37,7 @@ let handle_client res flow addr =
   match msg with
   | Gemmo.Ipc.FrontendMsg.LoadUrl { url } ->
       let%bind uri = Gemmo.Gemini.validate_url url in
-      let%bind resp = get_contents_and_serialize uri in
+      let%bind resp = get_contents_and_serialize net uri in
       Eio.Flow.copy_string (Yojson.Safe.to_string resp) flow;
       Ok ()
   | Close ->
@@ -45,19 +45,21 @@ let handle_client res flow addr =
       Eio.Promise.resolve res ();
       Ok ()
 
-let server_run sock =
+let server_run net sock =
   let stop, resolver = Eio.Promise.create ~label:"server_stop" () in
   Eio.Net.run_server sock
-    (fun flow addr -> error_handler flow @@ handle_client resolver flow addr)
+    (fun flow addr ->
+      error_handler flow @@ handle_client net resolver flow addr)
     ~stop
     ~on_error:(traceln "Error handling connection: %a" Fmt.exn)
 
 let run =
   Mirage_crypto_rng_unix.use_default ();
   Eio_main.run @@ fun env ->
+  let net = Eio.Stdenv.net env in
   Eio.Switch.run @@ fun sw ->
-  let sock = Eio.Net.listen ~sw ~backlog:5 (Eio.Stdenv.net env) addr in
-  server_run sock
+  let sock = Eio.Net.listen ~sw ~backlog:5 net addr in
+  server_run net sock
 
 let cmd_run =
   let doc = "Browse pages in Geminispace" in
