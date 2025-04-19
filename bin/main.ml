@@ -18,7 +18,13 @@ let get_contents_and_serialize uri =
       | _ -> Or_error.error_s [%message "mimetype not supported yet"])
   | _ -> Or_error.error_s [%message "response kind not supported yet"]
 
-let err_response = Gemmo.Ipc.Serialize.error
+let err_response msg = Yojson.Safe.to_string @@ Gemmo.Ipc.Serialize.error msg
+
+let error_handler flow = function
+  | Ok () -> ()
+  | Error err ->
+      Eio.Flow.copy_string (err_response @@ Error.to_string_hum err) flow;
+      ()
 
 let handle_client res flow addr =
   let open Or_error.Let_syntax in
@@ -27,15 +33,12 @@ let handle_client res flow addr =
   let line = Eio.Buf_read.line from_client in
   traceln "Received: %S" line;
   let json = Yojson.Safe.from_string line in
-  let%bind msg = Gemmo.Msg.of_yojson json in
+  let%bind msg = Gemmo.Ipc.FrontendMsg.of_yojson json in
   match msg with
-  | Gemmo.Msg.LoadUrl { url } ->
-      (match get_contents_and_serialize @@ Uri.of_string url with
-      | Ok resp -> Eio.Flow.copy_string (Yojson.Safe.to_string resp) flow
-      | Error err ->
-          Eio.Flow.copy_string
-            (Yojson.Safe.to_string @@ err_response @@ Error.to_string_hum err)
-            flow);
+  | Gemmo.Ipc.FrontendMsg.LoadUrl { url } ->
+      let%bind uri = Gemmo.Gemini.validate_url url in
+      let%bind resp = get_contents_and_serialize uri in
+      Eio.Flow.copy_string (Yojson.Safe.to_string resp) flow;
       Ok ()
   | Close ->
       Eio.Flow.copy_string "goodbye!" flow;
@@ -45,7 +48,7 @@ let handle_client res flow addr =
 let server_run sock =
   let stop, resolver = Eio.Promise.create ~label:"server_stop" () in
   Eio.Net.run_server sock
-    (fun flow addr -> Or_error.ok_exn @@ handle_client resolver flow addr)
+    (fun flow addr -> error_handler flow @@ handle_client resolver flow addr)
     ~stop
     ~on_error:(traceln "Error handling connection: %a" Fmt.exn)
 

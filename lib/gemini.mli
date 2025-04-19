@@ -11,3 +11,4 @@ type t =
   | Auth
 
 val of_reply : string -> t Or_error.t
+val validate_url : string -> Uri.t Or_error.t
