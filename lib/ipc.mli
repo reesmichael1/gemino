@@ -9,6 +9,6 @@ module FrontendMsg : sig
 end
 
 module Serialize : sig
-  val gemtext_lines : Gemtext.t -> Yojson.Safe.t
+  val gemini : Gemini.t -> Yojson.Safe.t Or_error.t
   val error : string -> Yojson.Safe.t
 end

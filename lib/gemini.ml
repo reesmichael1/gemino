@@ -2,8 +2,11 @@ open Base
 
 type success_reply = { mimetype : Mrmime.Content_type.t; body : string }
 
+(* TODO: Verify that the input prompts are required *)
+type input_kind = Normal of string | Sensitive of string
+
 type t =
-  | Input
+  | Input of input_kind
   | Success of success_reply
   | Redirect
   | Tempfail
@@ -13,14 +16,27 @@ type t =
 module Parser = struct
   open Angstrom
 
+  let newline = string "\r\n"
+
   let success =
     string "20 " *> Mrmime.Content_type.Decoder.content >>= fun mimetype ->
-    string "\r\n" *> take_while (fun _ -> true) >>= fun body ->
+    newline *> take_while (fun _ -> true) >>= fun body ->
     return (Success { mimetype; body })
 
-  let gem_reply = success
+  (* *Technically* we should take until we match on \r\n, but I'm having trouble making that work *)
+  let input_normal =
+    string "0 " *> take_while1 (fun c -> Char.(c <> '\r')) >>= fun prompt ->
+    string "\r\n" *> return (Input (Normal prompt))
+
+  let input_sensitive =
+    string "1 " *> take_while1 (fun c -> Char.(c <> '\r')) >>= fun prompt ->
+    string "\r\n" *> return (Input (Sensitive prompt))
+
+  let input = string "1" *> (input_normal <|> input_sensitive)
+  let gem_reply = success <|> input
 
   let parse contents =
+    Eio.Std.traceln "%S" contents;
     match parse_string ~consume:All gem_reply contents with
     | Ok reply -> Ok reply
     | Error msg ->

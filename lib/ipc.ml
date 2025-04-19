@@ -71,5 +71,24 @@ module Serialize = struct
     in
     aux [] lines
 
+  let gemini =
+    let open Or_error.Let_syntax in
+    function
+    | Gemini.Success r -> (
+        match (r.mimetype.ty, r.mimetype.subty) with
+        | `Text, `Ietf_token "gemini" ->
+            let%bind lines = Gemtext.of_string r.body in
+            let response = gemtext_lines lines in
+            Ok response
+        | _ -> Or_error.error_s [%message "mimetype not supported yet"])
+    | Gemini.Input i ->
+        let kind, p =
+          match i with
+          | Normal p -> (("kind", `String "normal"), p)
+          | Sensitive p -> (("kind", `String "sensitive"), p)
+        in
+        Ok (`Assoc [ ("input", `Assoc [ kind; ("prompt", `String p) ]) ])
+    | _ -> Or_error.error_s [%message "response kind not supported yet"]
+
   let error err = `Assoc [ ("error", `String err) ]
 end

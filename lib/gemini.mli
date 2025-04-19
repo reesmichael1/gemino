@@ -1,9 +1,10 @@
 open Base
 
 type success_reply = { mimetype : Mrmime.Content_type.t; body : string }
+type input_kind = Normal of string | Sensitive of string
 
 type t =
-  | Input
+  | Input of input_kind
   | Success of success_reply
   | Redirect
   | Tempfail
