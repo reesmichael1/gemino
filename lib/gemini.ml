@@ -2,6 +2,13 @@ open Base
 
 type success_reply = { mimetype : Mrmime.Content_type.t; body : string }
 
+type permfail_reply =
+  | General of string option
+  | NotFound of string option
+  | Gone of string option
+  | ProxyRefused of string option
+  | BadRequest of string option
+
 (* TODO: Verify that the input prompts are required *)
 type input_kind = Normal of string | Sensitive of string
 
@@ -10,7 +17,7 @@ type t =
   | Success of success_reply
   | Redirect
   | Tempfail
-  | Permfail
+  | Permfail of permfail_reply
   | Auth
 
 module Parser = struct
@@ -23,6 +30,23 @@ module Parser = struct
     newline *> take_while (fun _ -> true) >>= fun body ->
     return (Success { mimetype; body })
 
+  let permfail =
+    let permfail_gen num kind =
+      string (Printf.sprintf "%d " num)
+      *> take_while (fun c -> Char.(c <> '\r'))
+      >>= fun msg ->
+      string "\r\n"
+      *>
+      if String.length msg = 0 then return (Permfail (kind None))
+      else return (Permfail (kind (Some msg)))
+    in
+    string "5"
+    *> (permfail_gen 0 (fun m -> General m)
+       <|> permfail_gen 1 (fun m -> NotFound m)
+       <|> permfail_gen 2 (fun m -> Gone m)
+       <|> permfail_gen 3 (fun m -> ProxyRefused m)
+       <|> permfail_gen 9 (fun m -> BadRequest m))
+
   (* *Technically* we should take until we match on \r\n, but I'm having trouble making that work *)
   let input_normal =
     string "0 " *> take_while1 (fun c -> Char.(c <> '\r')) >>= fun prompt ->
@@ -33,7 +57,7 @@ module Parser = struct
     string "\r\n" *> return (Input (Sensitive prompt))
 
   let input = string "1" *> (input_normal <|> input_sensitive)
-  let gem_reply = success <|> input
+  let gem_reply = success <|> input <|> permfail
 
   let parse contents =
     Eio.Std.traceln "%S" contents;

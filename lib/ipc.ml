@@ -88,6 +88,22 @@ module Serialize = struct
           | Sensitive p -> (("kind", `String "sensitive"), p)
         in
         Ok (`Assoc [ ("input", `Assoc [ kind; ("prompt", `String p) ]) ])
+    | Gemini.Permfail f -> (
+        let msg_fmt = function
+          | Some m -> ("msg", `String m)
+          | None -> ("msg", `Null)
+        in
+        let failmsg descr msg =
+          Ok
+            (`Assoc
+               [ ("permfail", `Assoc [ ("kind", `String descr); msg_fmt msg ]) ])
+        in
+        match f with
+        | Gemini.General msg -> failmsg "general" msg
+        | NotFound msg -> failmsg "notfound" msg
+        | Gone msg -> failmsg "gone" msg
+        | ProxyRefused msg -> failmsg "proxyrequestrefused" msg
+        | BadRequest msg -> failmsg "badrequest" msg)
     | _ -> Or_error.error_s [%message "response kind not supported yet"]
 
   let error err = `Assoc [ ("error", `String err) ]
