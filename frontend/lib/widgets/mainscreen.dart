@@ -15,9 +15,12 @@ class MainScreen extends StatelessWidget {
         child: Column(
           children: [
             UrlBar(),
+            SizedBox(height: 16),
             Expanded(
               child: Consumer<ContentModel>(
-                builder: (context, model, child) => model.contents,
+                builder:
+                    (context, model, child) =>
+                        SelectionArea(child: model.contents),
               ),
             ),
           ],

@@ -23,8 +23,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final data = MediaQuery.of(context);
     return MaterialApp(
-      home: MainScreen(),
+      home: MediaQuery(
+        // This might not be necessary, but I have a HiDPI screen
+        // and this makes life more pleasant during development
+        data: data.copyWith(textScaler: TextScaler.linear(1.3)),
+        child: MainScreen(),
+      ),
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),

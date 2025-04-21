@@ -8,6 +8,10 @@ sealed class GemLine {
       return HeadingLine.fromJson(json['heading']);
     } else if (json.containsKey('link')) {
       return LinkLine.fromJson(json['link']);
+    } else if (json.containsKey('list')) {
+      return ListLine.fromJson(json);
+    } else if (json.containsKey('quote')) {
+      return QuoteLine.fromJson(json);
     } else {
       throw Exception('Unknown line type: $json');
     }
@@ -40,4 +44,22 @@ class LinkLine implements GemLine {
 
   factory LinkLine.fromJson(Map<String, dynamic> json) =>
       LinkLine(name: json['name'], url: json['url']);
+}
+
+class ListLine implements GemLine {
+  final String contents;
+
+  const ListLine({required this.contents});
+
+  factory ListLine.fromJson(Map<String, dynamic> json) =>
+      ListLine(contents: json['list']);
+}
+
+class QuoteLine implements GemLine {
+  final String contents;
+
+  const QuoteLine({required this.contents});
+
+  factory QuoteLine.fromJson(Map<String, dynamic> json) =>
+      QuoteLine(contents: json['quote']);
 }
