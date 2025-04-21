@@ -2,9 +2,9 @@ open Base
 
 module FrontendMsg : sig
   type url_opts = { url : string }
-  type t = Close | LoadUrl of url_opts
+  type input_opts = { url : string; input : string }
+  type t = Close | LoadUrl of url_opts | UserInput of input_opts
 
-  val to_yojson : t -> Yojson.Safe.t
   val of_yojson : Yojson.Safe.t -> t Or_error.t
 end
 

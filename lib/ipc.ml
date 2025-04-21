@@ -2,15 +2,22 @@ open Base
 open Ppx_yojson_conv_lib.Yojson_conv.Primitives
 
 module FrontendMsg = struct
-  type url_opts = { url : string } [@@deriving yojson]
-  type t = Close | LoadUrl of url_opts
+  type url_opts = { url : string } [@@deriving of_yojson]
+  type input_opts = { url : string; input : string } [@@deriving of_yojson]
+  type t = Close | LoadUrl of url_opts | UserInput of input_opts
 
-  let to_yojson msg : Yojson.Safe.t =
-    match msg with
-    | Close -> `Assoc [ ("kind", `String "close"); ("args", `List []) ]
-    | LoadUrl s -> `Assoc [ ("loadUrl", yojson_of_url_opts s) ]
+  let load_url_p l =
+    match List.Assoc.find ~equal:String.equal l "loadUrl" with
+    | Some s -> Some (LoadUrl (url_opts_of_yojson s))
+    | None -> None
+
+  let input_p l =
+    match List.Assoc.find ~equal:String.equal l "userInput" with
+    | Some s -> Some (UserInput (input_opts_of_yojson s))
+    | None -> None
 
   let of_yojson (json : Yojson.Safe.t) : t Or_error.t =
+    let err = Or_error.error_s [%message "unrecognized JSON from frontend"] in
     match json with
     | `String s -> (
         match s with
@@ -19,10 +26,11 @@ module FrontendMsg = struct
             Or_error.error_s
               [%message "unrecognized JSON string literal" (s : string)])
     | `Assoc l -> (
-        match List.Assoc.find ~equal:String.equal l "loadUrl" with
-        | Some s -> Ok (LoadUrl (url_opts_of_yojson s))
-        | None -> Or_error.error_s [%message "todo"])
-    | _ -> failwith "todo"
+        (* Try each `Assoc parser until we find one that matches (or error out if we don't find any) *)
+        match List.find_map ~f:(fun p -> p l) [ load_url_p; input_p ] with
+        | Some res -> Ok res
+        | None -> err)
+    | _ -> err
 end
 
 module Serialize = struct
@@ -30,6 +38,8 @@ module Serialize = struct
     | Gemtext.Line.HeadingLevel.Top -> `Int 1
     | Gemtext.Line.HeadingLevel.Sub -> `Int 2
     | Gemtext.Line.HeadingLevel.SubSub -> `Int 3
+
+  let status_wrapper num content = `Assoc ([ ("status", `Int num) ] @ content)
 
   let gemtext_line = function
     | Gemtext.Line.Text t -> `Assoc [ ("text", `String t) ]
@@ -57,16 +67,8 @@ module Serialize = struct
   let gemtext_lines lines =
     let rec aux acc = function
       | [] ->
-          `Assoc
-            [
-              ( "content",
-                `Assoc
-                  [
-                    ("lines", `List (List.rev acc));
-                    ("status", `Int 20);
-                    ("mime", `String "text/gemini");
-                  ] );
-            ]
+          status_wrapper 20
+            [ ("lines", `List (List.rev acc)); ("mime", `String "text/gemini") ]
       | l :: rest -> aux (gemtext_line l :: acc) rest
     in
     aux [] lines
@@ -88,14 +90,16 @@ module Serialize = struct
             let response = gemtext_lines lines in
             Ok response
         | _ -> Or_error.error_s [%message "mimetype not supported yet"])
-    | Gemini.Input i ->
-        let kind, p =
+    | Input i ->
+        let kind, p, num =
           match i with
-          | Normal p -> (("kind", `String "normal"), p)
-          | Sensitive p -> (("kind", `String "sensitive"), p)
+          | Normal p -> (("kind", `String "normal"), p, 10)
+          | Sensitive p -> (("kind", `String "sensitive"), p, 11)
         in
-        Ok (`Assoc [ ("input", `Assoc [ kind; ("prompt", `String p) ]) ])
-    | Gemini.Permfail f -> (
+        Ok
+          (status_wrapper num
+             [ ("input", `Assoc [ kind; ("prompt", `String p) ]) ])
+    | Permfail f -> (
         let failmsg = failmsg "permfail" in
         match f with
         | Gemini.General msg -> failmsg "general" msg
@@ -103,7 +107,7 @@ module Serialize = struct
         | Gone msg -> failmsg "gone" msg
         | ProxyRefused msg -> failmsg "proxyrequestrefused" msg
         | BadRequest msg -> failmsg "badrequest" msg)
-    | Gemini.Tempfail f -> (
+    | Tempfail f -> (
         let failmsg = failmsg "tempfail" in
         match f with
         | Gemini.Unspecified msg -> failmsg "unspecified" msg
@@ -123,7 +127,7 @@ module Serialize = struct
         match m with
         | Temporary url -> redirmsg "temporary" url
         | Permanent url -> redirmsg "permanent" url)
-    | _ -> Or_error.error_s [%message "response kind not supported yet"]
+    | Auth -> Or_error.error_s [%message "auth responses not yet implemented"]
 
   let error err = `Assoc [ ("error", `String err) ]
 end

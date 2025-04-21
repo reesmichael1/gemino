@@ -33,6 +33,12 @@ let handle_client net res flow addr =
       let%bind resp = get_contents_and_serialize net uri in
       Eio.Flow.copy_string (Yojson.Safe.to_string resp) flow;
       Ok ()
+  | Gemmo.Ipc.FrontendMsg.UserInput { input; url } ->
+      let%bind uri = Gemmo.Gemini.validate_url url in
+      let uri = Uri.with_query uri [ (input, []) ] in
+      let%bind resp = get_contents_and_serialize net uri in
+      Eio.Flow.copy_string (Yojson.Safe.to_string resp) flow;
+      Ok ()
   | Close ->
       Eio.Flow.copy_string "goodbye!" flow;
       Eio.Promise.resolve res ();

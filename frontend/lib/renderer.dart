@@ -1,72 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'gemtext.dart';
+import '../gemtext.dart';
 
 class Renderer {
   Renderer({required this.theme});
 
   final ThemeData theme;
 
-  TextStyle h1Style() {
+  TextStyle _h1Style() {
     return theme.textTheme.headlineLarge!;
   }
 
-  TextStyle h2Style() {
+  TextStyle _h2Style() {
     return theme.textTheme.headlineMedium!;
   }
 
-  TextStyle h3Style() {
+  TextStyle _h3Style() {
     return theme.textTheme.headlineSmall!;
   }
 
-  TextStyle headingStyle(int level) {
+  TextStyle _headingStyle(int level) {
     if (level == 1) {
-      return h1Style();
+      return _h1Style();
     } else if (level == 2) {
-      return h2Style();
+      return _h2Style();
     } else if (level == 3) {
-      return h3Style();
+      return _h3Style();
     } else {
       throw Exception('unrecognized heading level: $level');
     }
   }
 
-  TextStyle textStyle() {
+  TextStyle _textStyle() {
     return theme.textTheme.bodyLarge!;
   }
 
-  TextStyle linkStyle() {
-    return textStyle().copyWith(
+  TextStyle _linkStyle() {
+    return _textStyle().copyWith(
       color: Colors.blue,
       decoration: TextDecoration.underline,
     );
   }
 
-  List<Widget> renderContents(List<GemLine> lines) {
-    return lines
-        .map(
-          (line) => switch (line) {
-            TextLine(contents: final contents) => Text(
-              contents,
-              style: textStyle(),
-            ),
-            HeadingLine(level: final level, text: final text) => Text(
-              text,
-              style: headingStyle(level),
-            ),
-            LinkLine(name: final name, url: final url) => Text.rich(
-              TextSpan(
-                text: name,
-                style: linkStyle(),
-                recognizer:
-                    TapGestureRecognizer()
-                      ..onTap = () {
-                        debugPrint('clicked $url');
-                      },
-              ),
-            ),
-          },
-        )
-        .toList();
+  Widget renderContents(List<GemLine> lines) {
+    return ListView(
+      children:
+          lines
+              .map(
+                (line) => switch (line) {
+                  TextLine(contents: final contents) => Text(
+                    contents,
+                    style: _textStyle(),
+                  ),
+                  HeadingLine(level: final level, text: final text) => Text(
+                    text,
+                    style: _headingStyle(level),
+                  ),
+                  LinkLine(name: final name, url: final url) => Text.rich(
+                    TextSpan(
+                      text: name,
+                      style: _linkStyle(),
+                      recognizer:
+                          TapGestureRecognizer()
+                            ..onTap = () {
+                              debugPrint('clicked $url');
+                            },
+                    ),
+                  ),
+                },
+              )
+              .toList(),
+    );
   }
 }
