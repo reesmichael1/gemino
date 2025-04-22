@@ -23,7 +23,7 @@ void sendInput(
 ) async {
   final socket = await openSocket();
   socket.listen((data) {
-    final json = String.fromCharCodes(data).trim();
+    final json = utf8.decode(data).trim();
     final response = ServerResponse.fromJson(jsonDecode(json));
     callback(response);
   });
@@ -47,7 +47,7 @@ class _UserInputMsg {
 urlSubmit(String url, void Function(ServerResponse) callback) async {
   final socket = await openSocket();
   socket.listen((data) {
-    final json = String.fromCharCodes(data).trim();
+    final json = utf8.decode(data);
     final response = ServerResponse.fromJson(jsonDecode(json));
     callback(response);
   });

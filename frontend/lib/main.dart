@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// import 'dart:convert';
 import 'dart:io';
 
 import 'contentmodel.dart';
-// import 'ipc.dart';
-// import 'renderer.dart';
 import 'widgets/mainscreen.dart';
 
 void startServer() async {
