@@ -23,9 +23,8 @@ class InputPrompter extends StatelessWidget {
                   context,
                   listen: false,
                 ).handleServerResponse(context, resp);
+                Navigator.pop(context);
               });
-
-              Navigator.pop(context);
             },
           ),
         ],

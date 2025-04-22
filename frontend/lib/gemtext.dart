@@ -12,6 +12,8 @@ sealed class GemLine {
       return ListLine.fromJson(json);
     } else if (json.containsKey('quote')) {
       return QuoteLine.fromJson(json);
+    } else if (json.containsKey('pre')) {
+      return PreformatLine.fromJson(json['pre']);
     } else {
       throw Exception('Unknown line type: $json');
     }
@@ -62,4 +64,14 @@ class QuoteLine implements GemLine {
 
   factory QuoteLine.fromJson(Map<String, dynamic> json) =>
       QuoteLine(contents: json['quote']);
+}
+
+class PreformatLine implements GemLine {
+  final List<String> lines;
+
+  // We should also support the alt text here eventually
+  const PreformatLine({required this.lines});
+
+  factory PreformatLine.fromJson(Map<String, dynamic> json) =>
+      PreformatLine(lines: json['lines'].cast<String>());
 }

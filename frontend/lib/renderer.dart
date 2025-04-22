@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../gemtext.dart';
 
 sealed class _RenderBox {}
@@ -8,6 +9,12 @@ class _QuoteBox extends _RenderBox {
   _QuoteBox({required this.contents});
 
   final List<Widget> contents;
+}
+
+class _PreformatBox extends _RenderBox {
+  _PreformatBox({required this.lines});
+
+  final List<Widget> lines;
 }
 
 class _TextBox extends _RenderBox {
@@ -74,6 +81,15 @@ class Renderer {
           children: contents,
         ),
       ),
+      _PreformatBox(lines: final lines) => Container(
+        padding: EdgeInsets.all(16),
+        color: Colors.grey.withAlpha(25),
+        alignment: Alignment.centerLeft,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: lines,
+        ),
+      ),
       _TextBox(contents: final contents) => contents,
       _LinkBox(name: final name, url: final url) => Text.rich(
         TextSpan(
@@ -137,6 +153,14 @@ class Renderer {
       ListLine() => block.map(_renderBoxFromGemLine).toList(),
       QuoteLine() => [
         _QuoteBox(contents: _extractText(block).map((l) => Text(l)).toList()),
+      ],
+      PreformatLine(lines: final lines) => [
+        _PreformatBox(
+          lines:
+              lines
+                  .map((l) => Text(l, style: GoogleFonts.spaceMono()))
+                  .toList(),
+        ),
       ],
     };
   }
