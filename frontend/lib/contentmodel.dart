@@ -23,10 +23,11 @@ class ContentModel extends ChangeNotifier {
 
   void handleServerResponse(BuildContext context, ServerResponse response) {
     switch (response) {
-      case SuccessResponse():
+      case SuccessResponse(lines: final lines, url: final url):
         _contents = Renderer(
           theme: Theme.of(context),
-        ).renderContents(context, response.lines);
+        ).renderContents(context, lines);
+        _url = url;
       case InputResponse(prompt: final prompt):
         showInputPrompter(context, prompt, url);
       case ErrorResponse(msg: final msg):

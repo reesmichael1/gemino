@@ -27,13 +27,6 @@ class _TextBox extends _RenderBox {
   final Widget contents;
 }
 
-class _LinkBox extends _RenderBox {
-  _LinkBox({required this.name, required this.url});
-
-  final String name;
-  final String url;
-}
-
 class Renderer {
   Renderer({required this.theme});
 
@@ -95,17 +88,6 @@ class Renderer {
         ),
       ),
       _TextBox(contents: final contents) => contents,
-      _LinkBox(name: final name, url: final url) => Text.rich(
-        TextSpan(
-          text: name,
-          style: _linkStyle(),
-          recognizer:
-              TapGestureRecognizer()
-                ..onTap = () {
-                  debugPrint('clicked $url');
-                },
-        ),
-      ),
     };
   }
 

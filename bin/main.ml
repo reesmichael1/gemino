@@ -8,7 +8,7 @@ let get_contents_and_serialize net uri =
   let open Or_error.Let_syntax in
   let%bind contents = Gemmo.Net.load_uri net uri in
   let%bind response = Gemmo.Gemini.of_reply contents in
-  let%bind answer = Gemmo.Ipc.Serialize.gemini response in
+  let%bind answer = Gemmo.Ipc.Serialize.gemini uri response in
   Ok answer
 
 let err_response msg = Yojson.Safe.to_string @@ Gemmo.Ipc.Serialize.error msg

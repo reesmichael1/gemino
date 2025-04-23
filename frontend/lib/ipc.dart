@@ -125,15 +125,16 @@ class ErrorResponse implements ServerResponse {
 
 class SuccessResponse implements ServerResponse {
   final String mime;
+  final String url;
   final List<GemLine> lines;
 
-  SuccessResponse({required this.mime, required this.lines});
+  SuccessResponse({required this.mime, required this.lines, required this.url});
 
   factory SuccessResponse.fromJson(Map<String, dynamic> json) {
     final lines =
         (json['lines'] as List).map((item) => GemLine.fromJson(item)).toList();
 
-    return SuccessResponse(lines: lines, mime: json['mime']);
+    return SuccessResponse(lines: lines, mime: json['mime'], url: json['url']);
   }
 }
 

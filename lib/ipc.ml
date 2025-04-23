@@ -77,16 +77,28 @@ module Serialize = struct
               `Assoc [ ("url", `String (Uri.to_string url)); ("name", name) ] );
           ]
 
-  let gemtext_lines lines =
+  let gemtext_lines uri lines =
     let rec aux acc = function
       | [] ->
+          (* Don't return the explicit port unless it's non-standard *)
+          let uri =
+            Uri.to_string
+            @@
+            match Uri.port uri with
+            | Some 1965 -> Uri.with_port uri None
+            | _ -> uri
+          in
           status_wrapper 20
-            [ ("lines", `List (List.rev acc)); ("mime", `String "text/gemini") ]
+            [
+              ("lines", `List (List.rev acc));
+              ("mime", `String "text/gemini");
+              ("url", `String uri);
+            ]
       | l :: rest -> aux (gemtext_line l :: acc) rest
     in
     aux [] lines
 
-  let gemini =
+  let gemini uri =
     let open Or_error.Let_syntax in
     let msg_fmt = function
       | Some m -> ("msg", `String m)
@@ -100,7 +112,7 @@ module Serialize = struct
         match (r.mimetype.ty, r.mimetype.subty) with
         | `Text, `Ietf_token "gemini" ->
             let%bind lines = Gemtext.of_string r.body in
-            let response = gemtext_lines lines in
+            let response = gemtext_lines uri lines in
             Ok response
         | _ -> Or_error.error_s [%message "mimetype not supported yet"])
     | Input i ->
