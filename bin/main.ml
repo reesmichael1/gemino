@@ -49,6 +49,13 @@ let handle_client net res flow addr =
         if is_absolute_url path then Gemmo.Gemini.validate_url path
         else
           let%bind uri = Gemmo.Gemini.validate_url url in
+          (* The path that comes from the link is a relative path,
+           * so we replace the last component with the new path *)
+          let base_path =
+            Uri.path uri |> String.split ~on:'/' |> List.drop_last_exn
+            |> String.concat ~sep:"/"
+          in
+          let path = base_path ^ "/" ^ path in
           Ok (Uri.with_path uri path)
       in
       let%bind resp = get_contents_and_serialize net uri in
