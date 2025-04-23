@@ -41,11 +41,12 @@ class HeadingLine implements GemLine {
 class LinkLine implements GemLine {
   final String name;
   final String url;
+  final String scheme;
 
-  const LinkLine({required this.name, required this.url});
+  const LinkLine({required this.name, required this.url, required this.scheme});
 
   factory LinkLine.fromJson(Map<String, dynamic> json) =>
-      LinkLine(name: json['name'], url: json['url']);
+      LinkLine(name: json['name'], url: json['url'], scheme: json['scheme']);
 }
 
 class ListLine implements GemLine {

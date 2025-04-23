@@ -71,10 +71,16 @@ module Serialize = struct
           ]
     | Link { url; name } ->
         let name = match name with Some s -> `String s | None -> `Null in
+        let scheme = Uri.scheme url |> Option.value ~default:"gemini" in
         `Assoc
           [
             ( "link",
-              `Assoc [ ("url", `String (Uri.to_string url)); ("name", name) ] );
+              `Assoc
+                [
+                  ("url", `String (Uri.to_string url));
+                  ("name", name);
+                  ("scheme", `String scheme);
+                ] );
           ]
 
   let gemtext_lines uri lines =

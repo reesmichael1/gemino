@@ -64,7 +64,12 @@ class Renderer {
     return _textStyle().copyWith(
       color: Colors.blue,
       decoration: TextDecoration.underline,
+      decorationColor: Colors.blue,
     );
+  }
+
+  TextStyle _externLinkStyle() {
+    return _textStyle().copyWith(color: Colors.red);
   }
 
   Widget _convertRenderBox(_RenderBox box) {
@@ -111,26 +116,36 @@ class Renderer {
       HeadingLine(text: final text, level: final level) => _TextBox(
         contents: Text(text, style: _headingStyle(level)),
       ),
-      LinkLine(name: final name, url: final path) => _TextBox(
-        contents: Text.rich(
-          TextSpan(
-            text: name,
-            style: _linkStyle(),
-            recognizer:
-                TapGestureRecognizer()
-                  ..onTap = () {
-                    linkClick(
-                      Provider.of<ContentModel>(context, listen: false).url,
-                      path,
-                      (resp) => Provider.of<ContentModel>(
-                        context,
-                        listen: false,
-                      ).handleServerResponse(context, resp),
-                    );
-                  },
-          ),
-        ),
-      ),
+      LinkLine(name: final name, url: final path, scheme: final scheme) => () {
+        if (scheme == "gemini") {
+          return _TextBox(
+            contents: Text.rich(
+              TextSpan(
+                text: name,
+                style: _linkStyle(),
+                recognizer:
+                    TapGestureRecognizer()
+                      ..onTap = () {
+                        linkClick(
+                          Provider.of<ContentModel>(context, listen: false).url,
+                          path,
+                          (resp) => Provider.of<ContentModel>(
+                            context,
+                            listen: false,
+                          ).handleServerResponse(context, resp),
+                        );
+                      },
+              ),
+            ),
+          );
+        } else {
+          return _TextBox(
+            contents: Text.rich(
+              TextSpan(text: 'EXTERN LINK: $name', style: _externLinkStyle()),
+            ),
+          );
+        }
+      }(),
       ListLine(contents: final contents) => _TextBox(
         contents: Text('\u2022 $contents', style: _textStyle()),
       ),
