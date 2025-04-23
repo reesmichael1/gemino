@@ -57,6 +57,23 @@ urlSubmit(String url, void Function(ServerResponse) callback) async {
   socket.writeln(json);
 }
 
+linkClick(
+  String url,
+  String path,
+  void Function(ServerResponse) callback,
+) async {
+  final socket = await openSocket();
+  socket.listen((data) {
+    final json = utf8.decode(data);
+    final response = ServerResponse.fromJson(jsonDecode(json));
+    callback(response);
+  });
+
+  final msg = _LinkClickMsg(url: url, path: path);
+  String json = jsonEncode(msg);
+  socket.writeln(json);
+}
+
 sealed class ServerResponse {
   const ServerResponse();
 
@@ -118,6 +135,17 @@ class SuccessResponse implements ServerResponse {
 
     return SuccessResponse(lines: lines, mime: json['mime']);
   }
+}
+
+class _LinkClickMsg {
+  final String url;
+  final String path;
+
+  _LinkClickMsg({required this.url, required this.path});
+
+  Map<String, dynamic> toJson() => {
+    'linkClick': {'url': url, 'path': path},
+  };
 }
 
 class LoadUrlMsg {

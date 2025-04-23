@@ -4,7 +4,13 @@ open Ppx_yojson_conv_lib.Yojson_conv.Primitives
 module FrontendMsg = struct
   type url_opts = { url : string } [@@deriving of_yojson]
   type input_opts = { url : string; input : string } [@@deriving of_yojson]
-  type t = Close | LoadUrl of url_opts | UserInput of input_opts
+  type linkclick_opts = { url : string; path : string } [@@deriving of_yojson]
+
+  type t =
+    | Close
+    | LoadUrl of url_opts
+    | UserInput of input_opts
+    | LinkClick of linkclick_opts
 
   let load_url_p l =
     match List.Assoc.find ~equal:String.equal l "loadUrl" with
@@ -14,6 +20,11 @@ module FrontendMsg = struct
   let input_p l =
     match List.Assoc.find ~equal:String.equal l "userInput" with
     | Some s -> Some (UserInput (input_opts_of_yojson s))
+    | None -> None
+
+  let linkclick_p l =
+    match List.Assoc.find ~equal:String.equal l "linkClick" with
+    | Some s -> Some (LinkClick (linkclick_opts_of_yojson s))
     | None -> None
 
   let of_yojson (json : Yojson.Safe.t) : t Or_error.t =
@@ -27,7 +38,9 @@ module FrontendMsg = struct
               [%message "unrecognized JSON string literal" (s : string)])
     | `Assoc l -> (
         (* Try each `Assoc parser until we find one that matches (or error out if we don't find any) *)
-        match List.find_map ~f:(fun p -> p l) [ load_url_p; input_p ] with
+        match
+          List.find_map ~f:(fun p -> p l) [ load_url_p; input_p; linkclick_p ]
+        with
         | Some res -> Ok res
         | None -> err)
     | _ -> err

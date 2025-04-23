@@ -30,11 +30,11 @@
   eio
   mirage-crypto-rng
   mrmime
+  re
   tls
   tls-eio
   uri
   ppx_deriving
-  ; ppx_deriving_yojson
   ppx_jane
   ppx_let
   ppx_yojson_conv)

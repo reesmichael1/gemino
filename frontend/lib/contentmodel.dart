@@ -26,7 +26,7 @@ class ContentModel extends ChangeNotifier {
       case SuccessResponse():
         _contents = Renderer(
           theme: Theme.of(context),
-        ).renderContents(response.lines);
+        ).renderContents(context, response.lines);
       case InputResponse(prompt: final prompt):
         showInputPrompter(context, prompt, url);
       case ErrorResponse(msg: final msg):

@@ -20,6 +20,7 @@ depends: [
   "eio"
   "mirage-crypto-rng"
   "mrmime"
+  "re"
   "tls"
   "tls-eio"
   "uri"

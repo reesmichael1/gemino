@@ -19,6 +19,11 @@ let error_handler flow = function
       Eio.Flow.copy_string (err_response @@ Error.to_string_hum err) flow;
       ()
 
+let is_absolute_url s =
+  (* From https://stackoverflow.com/questions/10687099/ *)
+  let re = Re.Str.regexp "^(?:[a-z+]+:)?//" in
+  Re.Str.string_match re s 0
+
 let handle_client net res flow addr =
   let open Or_error.Let_syntax in
   traceln "Accepted connection at %a" Eio.Net.Sockaddr.pp addr;
@@ -33,9 +38,19 @@ let handle_client net res flow addr =
       let%bind resp = get_contents_and_serialize net uri in
       Eio.Flow.copy_string (Yojson.Safe.to_string resp) flow;
       Ok ()
-  | Gemmo.Ipc.FrontendMsg.UserInput { input; url } ->
+  | UserInput { input; url } ->
       let%bind uri = Gemmo.Gemini.validate_url url in
       let uri = Uri.with_query uri [ (input, []) ] in
+      let%bind resp = get_contents_and_serialize net uri in
+      Eio.Flow.copy_string (Yojson.Safe.to_string resp) flow;
+      Ok ()
+  | LinkClick { url; path } ->
+      let%bind uri =
+        if is_absolute_url path then Gemmo.Gemini.validate_url path
+        else
+          let%bind uri = Gemmo.Gemini.validate_url url in
+          Ok (Uri.with_path uri path)
+      in
       let%bind resp = get_contents_and_serialize net uri in
       Eio.Flow.copy_string (Yojson.Safe.to_string resp) flow;
       Ok ()

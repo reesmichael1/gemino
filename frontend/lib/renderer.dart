@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import '../contentmodel.dart';
 import '../gemtext.dart';
+import '../ipc.dart';
 
 sealed class _RenderBox {}
 
@@ -117,7 +121,7 @@ class Renderer {
         .toList();
   }
 
-  _RenderBox _renderBoxFromGemLine(GemLine line) {
+  _RenderBox _renderBoxFromGemLine(BuildContext context, GemLine line) {
     return switch (line) {
       TextLine(contents: final contents) => _TextBox(
         contents: Text(contents, style: _textStyle()),
@@ -125,7 +129,7 @@ class Renderer {
       HeadingLine(text: final text, level: final level) => _TextBox(
         contents: Text(text, style: _headingStyle(level)),
       ),
-      LinkLine(name: final name, url: final url) => _TextBox(
+      LinkLine(name: final name, url: final path) => _TextBox(
         contents: Text.rich(
           TextSpan(
             text: name,
@@ -133,7 +137,14 @@ class Renderer {
             recognizer:
                 TapGestureRecognizer()
                   ..onTap = () {
-                    debugPrint('clicked $url');
+                    linkClick(
+                      Provider.of<ContentModel>(context, listen: false).url,
+                      path,
+                      (resp) => Provider.of<ContentModel>(
+                        context,
+                        listen: false,
+                      ).handleServerResponse(context, resp),
+                    );
                   },
           ),
         ),
@@ -145,12 +156,13 @@ class Renderer {
     };
   }
 
-  List<_RenderBox> _convertToRenderBox(List<GemLine> block) {
+  List<_RenderBox> _convertToRenderBox(
+    BuildContext context,
+    List<GemLine> block,
+  ) {
     return switch (block[0]) {
-      TextLine() ||
-      HeadingLine() ||
-      LinkLine() ||
-      ListLine() => block.map(_renderBoxFromGemLine).toList(),
+      TextLine() || HeadingLine() || LinkLine() || ListLine() =>
+        block.map((l) => _renderBoxFromGemLine(context, l)).toList(),
       QuoteLine() => [
         _QuoteBox(contents: _extractText(block).map((l) => Text(l)).toList()),
       ],
@@ -165,7 +177,7 @@ class Renderer {
     };
   }
 
-  List<_RenderBox> _groupIntoBoxes(List<GemLine> lines) {
+  List<_RenderBox> _groupIntoBoxes(BuildContext context, List<GemLine> lines) {
     // Group lines by "similar types" so that we can group like lines
     // (i.e., quoted or preformatted lines) together in the styling
     if (lines.isEmpty) {
@@ -195,13 +207,13 @@ class Renderer {
     }
 
     final List<List<_RenderBox>> nested =
-        grouped.map((block) => _convertToRenderBox(block)).toList();
+        grouped.map((block) => _convertToRenderBox(context, block)).toList();
 
     return nested.expand((i) => i).toList();
   }
 
-  Widget renderContents(List<GemLine> lines) {
-    final List<_RenderBox> grouped = _groupIntoBoxes(lines);
+  Widget renderContents(BuildContext context, List<GemLine> lines) {
+    final List<_RenderBox> grouped = _groupIntoBoxes(context, lines);
     return ListView(
       children: grouped.map((box) => _convertRenderBox(box)).toList(),
     );

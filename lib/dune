@@ -6,6 +6,7 @@
   domain-name
   eio_main
   mrmime
+  re
   tls
   tls-eio
   tsdl

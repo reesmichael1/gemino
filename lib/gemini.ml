@@ -95,7 +95,6 @@ module Parser = struct
   let gem_reply = success <|> input <|> permfail <|> redirect <|> tempfail
 
   let parse contents =
-    Eio.Std.traceln "%S" contents;
     match parse_string ~consume:All gem_reply contents with
     | Ok reply -> Ok reply
     | Error msg ->
