@@ -211,8 +211,18 @@ class Renderer {
 
   Widget renderContents(BuildContext context, List<GemLine> lines) {
     final List<_RenderBox> grouped = _groupIntoBoxes(context, lines);
-    return ListView(
+    var controller = ScrollController();
+
+    // Reset the scroll position after computing the layout but before displaying
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.jumpTo(0);
+    });
+
+    final rendered = ListView(
+      controller: controller,
       children: grouped.map((box) => _convertRenderBox(box)).toList(),
     );
+
+    return rendered;
   }
 }
