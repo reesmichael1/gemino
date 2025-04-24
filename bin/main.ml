@@ -27,7 +27,7 @@ let is_absolute_url s =
 let handle_client net res flow addr =
   let open Or_error.Let_syntax in
   traceln "Accepted connection at %a" Eio.Net.Sockaddr.pp addr;
-  let from_client = Eio.Buf_read.of_flow ~max_size:100 flow in
+  let from_client = Eio.Buf_read.of_flow ~max_size:Int.max_value flow in
   let line = Eio.Buf_read.line from_client in
   traceln "Received: %S" line;
   let json = Yojson.Safe.from_string line in
