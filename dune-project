@@ -24,7 +24,6 @@
   (alcotest :with-test)
   angstrom
   base
-  bogue
   cmdliner
   domain-name
   eio

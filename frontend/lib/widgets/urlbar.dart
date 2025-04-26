@@ -17,6 +17,15 @@ class UrlBar extends StatelessWidget {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: model.canGoBack() ? model.historyBack : null,
+            ),
+            IconButton(
+              icon: Icon(Icons.arrow_forward),
+              onPressed: model.canGoForwards() ? model.historyForward : null,
+            ),
+            SizedBox(width: 8),
             Flexible(
               child: TextField(
                 decoration: InputDecoration(
@@ -31,7 +40,7 @@ class UrlBar extends StatelessWidget {
                     (resp) => Provider.of<ContentModel>(
                       context,
                       listen: false,
-                    ).handleServerResponse(context, resp),
+                    ).handleServerResponse(context, resp, true),
                   );
                 },
               ),

@@ -22,7 +22,7 @@ class InputPrompter extends StatelessWidget {
                 Provider.of<ContentModel>(
                   context,
                   listen: false,
-                ).handleServerResponse(context, resp);
+                ).handleServerResponse(context, resp, true);
                 Navigator.pop(context);
               });
             },

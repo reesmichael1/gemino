@@ -132,7 +132,7 @@ class Renderer {
                           (resp) => Provider.of<ContentModel>(
                             context,
                             listen: false,
-                          ).handleServerResponse(context, resp),
+                          ).handleServerResponse(context, resp, true),
                         );
                       },
               ),
