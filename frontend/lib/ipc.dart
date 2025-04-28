@@ -84,6 +84,10 @@ sealed class ServerResponse {
       return SuccessResponse.fromJson(json);
     } else if (_inRange(json['status'] as int, 10, 19)) {
       return InputResponse.fromJson(json);
+    } else if (_inRange(json['status'] as int, 40, 44)) {
+      return TempfailResponse.fromJson(json);
+    } else if (_inRange(json['status'] as int, 50, 59)) {
+      return PermfailResponse.fromJson(json);
     } else {
       throw Exception('unrecognized server response: $json');
     }
@@ -136,6 +140,32 @@ class SuccessResponse implements ServerResponse {
 
     return SuccessResponse(lines: lines, mime: json['mime'], url: json['url']);
   }
+}
+
+class TempfailResponse implements ServerResponse {
+  final String msg;
+  final int status;
+
+  TempfailResponse({required this.msg, required this.status});
+
+  factory TempfailResponse.fromJson(Map<String, dynamic> json) =>
+      TempfailResponse(
+        msg: json['tempfail']['msg'] ?? "",
+        status: json['status'],
+      );
+}
+
+class PermfailResponse implements ServerResponse {
+  final String msg;
+  final int status;
+
+  PermfailResponse({required this.msg, required this.status});
+
+  factory PermfailResponse.fromJson(Map<String, dynamic> json) =>
+      PermfailResponse(
+        msg: json['permfail']['msg'] ?? "",
+        status: json['status'],
+      );
 }
 
 class _LinkClickMsg {

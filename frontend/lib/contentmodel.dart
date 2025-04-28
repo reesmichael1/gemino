@@ -74,6 +74,8 @@ class ContentModel extends ChangeNotifier {
       case InputResponse(prompt: final prompt):
         showInputPrompter(context, prompt, url);
       case ErrorResponse(msg: final msg):
+      case PermfailResponse(msg: final msg):
+      case TempfailResponse(msg: final msg):
         _contents = Text('error: $msg');
     }
 

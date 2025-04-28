@@ -110,8 +110,13 @@ module Serialize = struct
       | Some m -> ("msg", `String m)
       | None -> ("msg", `Null)
     in
-    let failmsg kind desc msg =
-      Ok (`Assoc [ (kind, `Assoc [ ("kind", `String desc); msg_fmt msg ]) ])
+    let failmsg kind desc num msg =
+      Ok
+        (`Assoc
+           [
+             ("status", `Int num);
+             (kind, `Assoc [ ("kind", `String desc); msg_fmt msg ]);
+           ])
     in
     function
     | Gemini.Success r -> (
@@ -133,19 +138,19 @@ module Serialize = struct
     | Permfail f -> (
         let failmsg = failmsg "permfail" in
         match f with
-        | Gemini.General msg -> failmsg "general" msg
-        | NotFound msg -> failmsg "notfound" msg
-        | Gone msg -> failmsg "gone" msg
-        | ProxyRefused msg -> failmsg "proxyrequestrefused" msg
-        | BadRequest msg -> failmsg "badrequest" msg)
+        | Gemini.General msg -> failmsg "general" 50 msg
+        | NotFound msg -> failmsg "notfound" 51 msg
+        | Gone msg -> failmsg "gone" 52 msg
+        | ProxyRefused msg -> failmsg "proxyrequestrefused" 53 msg
+        | BadRequest msg -> failmsg "badrequest" 59 msg)
     | Tempfail f -> (
         let failmsg = failmsg "tempfail" in
         match f with
-        | Gemini.Unspecified msg -> failmsg "unspecified" msg
-        | ServerUnavailable msg -> failmsg "serverunavailable" msg
-        | CgiError msg -> failmsg "cgierror" msg
-        | ProxyError msg -> failmsg "proxyerror" msg
-        | SlowDown msg -> failmsg "slowdown" msg)
+        | Gemini.Unspecified msg -> failmsg "unspecified" 40 msg
+        | ServerUnavailable msg -> failmsg "serverunavailable" 41 msg
+        | CgiError msg -> failmsg "cgierror" 42 msg
+        | ProxyError msg -> failmsg "proxyerror" 43 msg
+        | SlowDown msg -> failmsg "slowdown" 44 msg)
     | Redirect m -> (
         let redirmsg desc url =
           Ok
