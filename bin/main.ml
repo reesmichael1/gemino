@@ -79,7 +79,7 @@ let run =
   Eio_main.run @@ fun env ->
   let net = Eio.Stdenv.net env in
   Eio.Switch.run @@ fun sw ->
-  let sock = Eio.Net.listen ~sw ~backlog:5 net addr in
+  let sock = Eio.Net.listen ~sw ~backlog:5 ~reuse_addr:true net addr in
   server_run net sock
 
 let cmd_run =
