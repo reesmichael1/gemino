@@ -1,4 +1,4 @@
-# gemmo
+# gemino
 
 A graphical [Gemini](https://geminiprotocol.net) client written in OCaml and Flutter.
 

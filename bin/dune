@@ -1,6 +1,6 @@
 (executable
- (public_name gemmo)
+ (public_name gemino)
  (name main)
  (preprocess
   (pps ppx_jane ppx_deriving.show ppx_let))
- (libraries gemmo mirage-crypto-rng.unix cmdliner))
+ (libraries gemino mirage-crypto-rng.unix cmdliner))

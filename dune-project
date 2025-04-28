@@ -1,6 +1,6 @@
 (lang dune 3.17)
 
-(name gemmo)
+(name gemino)
 
 (generate_opam_files true)
 
@@ -16,7 +16,7 @@
 ; (documentation https://url/to/documentation)
 
 (package
- (name gemmo)
+ (name gemino)
  (synopsis "A Gemini browser")
  (description "A browser for the Gemini protocol")
  (depends

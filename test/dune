@@ -1,3 +1,3 @@
 (test
- (libraries gemmo alcotest)
- (name test_gemmo))
+ (libraries gemino alcotest)
+ (name test_gemino))

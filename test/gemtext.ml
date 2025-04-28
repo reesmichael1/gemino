@@ -1,5 +1,5 @@
 open Base
-open Gemmo
+open Gemino
 
 let gemline = Alcotest.testable Gemtext.Line.pp Gemtext.Line.equal
 

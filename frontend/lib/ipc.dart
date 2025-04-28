@@ -9,7 +9,7 @@ bool _inRange(num source, num low, num high) {
 
 Future<Socket> openSocket() async {
   final address = InternetAddress(
-    '/run/user/1000/gemmo.sock',
+    '/run/user/1000/gemino.sock',
     type: InternetAddressType.unix,
   );
 

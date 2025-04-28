@@ -1,3 +1,3 @@
-# gemmo frontend
+# gemino frontend
 
-This is the frontend for the gemmo Gemini browser.
+This is the frontend for the gemino Gemini browser.
