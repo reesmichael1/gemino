@@ -2,14 +2,12 @@
  (libraries
   angstrom
   base
-  bogue
   domain-name
   eio_main
   mrmime
   re
   tls
   tls-eio
-  tsdl
   uri
   yojson)
  (preprocess

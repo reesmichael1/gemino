@@ -27,6 +27,7 @@
   cmdliner
   domain-name
   eio
+  eio-main
   mirage-crypto-rng
   mrmime
   re
