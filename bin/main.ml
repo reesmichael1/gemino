@@ -55,7 +55,9 @@ let handle_client net res flow addr =
             Uri.path uri |> String.split ~on:'/' |> List.drop_last_exn
             |> String.concat ~sep:"/"
           in
-          let path = base_path ^ "/" ^ path in
+          let path =
+            base_path ^ "/" ^ String.chop_prefix_if_exists ~prefix:"/" path
+          in
           Ok (Uri.with_path uri path)
       in
       let%bind resp = get_contents_and_serialize net uri in

@@ -109,12 +109,14 @@ ResponseKind _parseKind(String kind) {
 class InputResponse implements ServerResponse {
   final ResponseKind kind;
   final String prompt;
+  final String url;
 
-  InputResponse({required this.kind, required this.prompt});
+  InputResponse({required this.kind, required this.prompt, required this.url});
 
   factory InputResponse.fromJson(Map<String, dynamic> json) => InputResponse(
     kind: _parseKind(json['input']['kind']),
     prompt: json['input']['prompt'],
+    url: json['input']['url'],
   );
 }
 

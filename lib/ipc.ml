@@ -132,9 +132,13 @@ module Serialize = struct
           | Normal p -> (("kind", `String "normal"), p, 10)
           | Sensitive p -> (("kind", `String "sensitive"), p, 11)
         in
+        let uri = Uri.to_string uri in
         Ok
           (status_wrapper num
-             [ ("input", `Assoc [ kind; ("prompt", `String p) ]) ])
+             [
+               ( "input",
+                 `Assoc [ kind; ("prompt", `String p); ("url", `String uri) ] );
+             ])
     | Permfail f -> (
         let failmsg = failmsg "permfail" in
         match f with

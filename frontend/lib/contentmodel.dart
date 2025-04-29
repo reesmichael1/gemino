@@ -71,7 +71,7 @@ class ContentModel extends ChangeNotifier {
         } else {
           _url = url;
         }
-      case InputResponse(prompt: final prompt):
+      case InputResponse(prompt: final prompt, url: final url):
         showInputPrompter(context, prompt, url);
       case ErrorResponse(msg: final msg):
       case PermfailResponse(msg: final msg):

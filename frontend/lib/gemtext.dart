@@ -45,8 +45,11 @@ class LinkLine implements GemLine {
 
   const LinkLine({required this.name, required this.url, required this.scheme});
 
-  factory LinkLine.fromJson(Map<String, dynamic> json) =>
-      LinkLine(name: json['name'], url: json['url'], scheme: json['scheme']);
+  factory LinkLine.fromJson(Map<String, dynamic> json) => LinkLine(
+    name: json['name'] ?? json['url'],
+    url: json['url'],
+    scheme: json['scheme'],
+  );
 }
 
 class ListLine implements GemLine {
